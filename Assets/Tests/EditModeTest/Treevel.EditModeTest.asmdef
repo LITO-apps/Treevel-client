@@ -1,10 +1,11 @@
 {
-    "name": "Treevel.EditTest",
+    "name": "Treevel.EditModeTest",
     "rootNamespace": "",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "Treevel"
+        "Treevel",
+        "UniTask"
     ],
     "includePlatforms": [
         "Editor"

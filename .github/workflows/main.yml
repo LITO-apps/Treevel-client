@@ -6,7 +6,7 @@ env:
 jobs:
   test:
     name: ${{ matrix.testMode }} Test on Unity ${{ matrix.unityVersion }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     strategy:
       fail-fast: false
       matrix:
@@ -25,15 +25,18 @@ jobs:
           key: Library-${{ hashFiles('**/packages-lock.json') }}
           restore-keys: |
             Library-
-      - name: Unity - Test Runner
-        id: tests
-        uses: game-ci/unity-test-runner@v2
-        with:
-          unityVersion: ${{ matrix.unityVersion }}
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          artifactsPath: ${{ matrix.testMode }}-artifacts
-          testMode: ${{ matrix.testMode }}
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with: 
-          path: ${{ steps.tests.outputs.artifactsPath }}
+      - name: Build Contents
+        shell: bash
+        run: /opt/unity/Editor/Unity -batchmode -quit -projectPath ~/Projects/Unity/Treevel-client -executeMethod Treevel.Editor.AddressableProcessor.BuildContents_iOS
+#      - name: Unity - Test Runner
+#        id: tests
+#        uses: game-ci/unity-test-runner@v2
+#        with:
+#          unityVersion: ${{ matrix.unityVersion }}
+#          githubToken: ${{ secrets.GITHUB_TOKEN }}
+#          artifactsPath: ${{ matrix.testMode }}-artifacts
+#          testMode: ${{ matrix.testMode }}
+#      - name: Upload Artifacts
+#        uses: actions/upload-artifact@v2
+#        with: 
+#          path: ${{ steps.tests.outputs.artifactsPath }}
