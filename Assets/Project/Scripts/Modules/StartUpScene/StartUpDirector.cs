@@ -1,7 +1,7 @@
-using System;
 using Cysharp.Threading.Tasks;
 using GoogleMobileAds.Api;
 using PlayFab;
+using Treevel.Common.Components.UIs;
 using Treevel.Common.Managers;
 using Treevel.Common.Networks;
 using Treevel.Common.Networks.Requests;
@@ -23,6 +23,10 @@ namespace Treevel.Modules.StartUpScene
             // Don't destroy EventSystem
             var eventSystem = FindObjectOfType<EventSystem>();
             if (eventSystem != null) DontDestroyOnLoad(eventSystem.gameObject);
+
+            // Don't destroy TapObjectGenerator
+            var tapObjectGenerator = FindObjectOfType<TapObjectGenerator>();
+            if (tapObjectGenerator != null) DontDestroyOnLoad(tapObjectGenerator.gameObject);
 
             // UIManager Initialize
             await UIManager.Instance.InitializeAsync();
