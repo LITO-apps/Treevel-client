@@ -24,10 +24,6 @@ namespace Treevel.Modules.StartUpScene
             var eventSystem = FindObjectOfType<EventSystem>();
             if (eventSystem != null) DontDestroyOnLoad(eventSystem.gameObject);
 
-            // Don't destroy TapObjectGenerator
-            var tapObjectGenerator = FindObjectOfType<TapObjectGenerator>();
-            if (tapObjectGenerator != null) DontDestroyOnLoad(tapObjectGenerator.gameObject);
-
             // UIManager Initialize
             await UIManager.Instance.InitializeAsync();
 

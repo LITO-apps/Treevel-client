@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Treevel.Common.Utils;
 using UnityEngine;
 
 namespace Treevel.Common.Components.UIs
@@ -14,7 +15,8 @@ namespace Treevel.Common.Components.UIs
             if (Input.GetMouseButtonDown(0))
             {
                 _mousePosition = Input.mousePosition;
-                Instantiate(tapObjectController, Camera.main.ScreenToWorldPoint(_mousePosition),Quaternion.identity);
+                var tapObject = Instantiate(tapObjectController, transform, false);
+                tapObject.transform.position = _mousePosition;
             }
         }
     }
