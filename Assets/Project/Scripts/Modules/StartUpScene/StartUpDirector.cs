@@ -23,6 +23,8 @@ namespace Treevel.Modules.StartUpScene
             // Don't destroy EventSystem
             var eventSystem = FindObjectOfType<EventSystem>();
             if (eventSystem != null) DontDestroyOnLoad(eventSystem.gameObject);
+            var tapObjectCanvas = FindObjectOfType<TapObjectGenerator>();
+            if (tapObjectCanvas != null) DontDestroyOnLoad(tapObjectCanvas.GetComponent<Canvas>());
 
             // UIManager Initialize
             await UIManager.Instance.InitializeAsync();

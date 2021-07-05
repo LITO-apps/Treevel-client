@@ -1,10 +1,8 @@
-using System.Collections;
-using System.Collections.Generic;
-using Treevel.Common.Utils;
 using UnityEngine;
 
 namespace Treevel.Common.Components.UIs
 {
+    [RequireComponent(typeof(Canvas))]
     public class TapObjectGenerator : MonoBehaviour
     {
         public GameObject tapObjectController;
