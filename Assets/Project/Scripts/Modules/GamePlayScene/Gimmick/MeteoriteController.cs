@@ -2,18 +2,16 @@
 using System.Linq;
 using Treevel.Common.Entities;
 using Treevel.Common.Entities.GameDatas;
+using Treevel.Common.Managers;
 using Treevel.Common.Utils;
 using Treevel.Modules.GamePlayScene.Bottle;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace Treevel.Modules.GamePlayScene.Gimmick
 {
-    [RequireComponent(typeof(GameSpriteRendererUnifier))]
-    [RequireComponent(typeof(Collider2D))]
     public class MeteoriteController : GimmickControllerBase
     {
         /// <summary>
@@ -22,61 +20,82 @@ namespace Treevel.Modules.GamePlayScene.Gimmick
         private Vector2 _targetPos;
 
         /// <summary>
-        /// 警告のプレハブ
+        /// 目標座標からどれだけ離れた位置に出現させるか
         /// </summary>
-        [SerializeField] protected AssetReferenceGameObject _warningPrefab;
+        private Vector2 _startPosMargin;
 
         /// <summary>
-        /// 速さ
+        /// 攻撃するために移動する距離
         /// </summary>
-        [SerializeField] private float _speed = 0.05f;
+        private float _attackMoveDistance;
 
         /// <summary>
-        /// 警告オブジェクトインスタンス（ゲーム終了時片付けするためにメンバー変数として持つ）
+        /// 隕石部分
         /// </summary>
-        private GameObject _warningObj;
+        [SerializeField] private GameObject _meteorite;
 
         /// <summary>
-        /// 隕石の画像の表示時間
+        /// 隕石のSpriteRenderer
         /// </summary>
-        [SerializeField] private float _meteoriteDisplayTime = 1.5f;
+        private SpriteRenderer _meteoriteRenderer;
 
         /// <summary>
-        /// 隕石本体移動させる用フラグ
+        /// 隕石のAnimator
         /// </summary>
-        private bool _isMoving = false;
+        private Animator _meteoriteAnimator;
 
-        private SpriteRenderer _renderer;
+        /// <summary>
+        /// 隕石の穴部分のSpriteRenderer
+        /// </summary>
+        [SerializeField] private SpriteRenderer _meteoriteHoleRenderer;
+
+        /// <summary>
+        /// 隕石の影
+        /// </summary>
+        private GameObject _shadow;
+
+        private const string _ANIMATOR_PARAM_TRIGGER_WARNING = "Warning";
+        private const string _ATTACK_ANIMATION_CLIP_NAME = "Meteorite@attack";
+        private static readonly int _ATTACK_STATE_NAME_HASH = Animator.StringToHash("Meteorite@attack");
+        private static readonly int _REMAINING_STATE_NAME_HASH = Animator.StringToHash("Meteorite@remaining");
 
         private void Awake()
         {
             base.Awake();
+            _startPosMargin = new Vector2(2.5f * GameWindowController.Instance.GetTileWidth(), 1.5f * GameWindowController.Instance.GetTileWidth());
 
-            _renderer = GetComponent<SpriteRenderer>();
+            _meteoriteRenderer = _meteorite.GetComponent<SpriteRenderer>();
+            _meteoriteAnimator = GetComponent<Animator>();
+
             this.OnTriggerEnter2DAsObservable()
-                .Where(_ => transform.position.z >= 0)
                 .Select(other => other.GetComponent<BottleControllerBase>())
-                .Where(bottle => bottle && bottle.IsAttackable && !bottle.IsInvincible)
+                .Where(bottle => bottle != null)
+                .Where(bottle => bottle.IsAttackable)
+                .Where(bottle => !bottle.IsInvincible)
                 .Subscribe(bottle => HandleCollision(bottle.gameObject))
                 .AddTo(this);
-            GamePlayDirector.Instance.GameEnd.Where(_ => _warningObj != null)
-                .Subscribe(_ => _warningPrefab.ReleaseInstance(_warningObj)).AddTo(this);
-        }
 
-        protected override void HandleCollision(GameObject other)
-        {
-            // 衝突したオブジェクトは赤色に変える
-            gameObject.GetComponent<SpriteRenderer>().color = Color.red;
+            GamePlayDirector.Instance.GameEnd.Subscribe(_ => {
+                SoundManager.Instance.StopSE(ESEKey.Gimmick_Meteorite_Drop);
+                SoundManager.Instance.StopSE(ESEKey.Gimmick_Meteorite_Collide);
 
-            gameObject.GetComponent<Renderer>().sortingLayerName = Constants.SortingLayerName.GIMMICK;
-
-            // 隕石を衝突したボトルに追従させる
-            gameObject.transform.SetParent(other.transform);
+            }).AddTo(this);
+            GamePlayDirector.Instance.GameSucceeded.Subscribe(_ => {
+                if (_shadow != null) Destroy(_shadow);
+                Destroy(gameObject);
+            }).AddTo(this);
+            GamePlayDirector.Instance.GameFailed.Subscribe(_ => {
+                if (_shadow != null) _shadow.GetComponent<Animator>().speed = 0;
+                _meteoriteAnimator.speed = 0f;
+            }).AddTo(this);
         }
 
         public override void Initialize(GimmickData gimmickData)
         {
             base.Initialize(gimmickData);
+            // 描画順序の設定
+            _meteoriteRenderer.sortingOrder += 2;
+            _meteoriteHoleRenderer.sortingOrder += 1;
 
             switch (gimmickData.type) {
                 case EGimmickType.Meteorite:
@@ -107,56 +126,62 @@ namespace Treevel.Modules.GamePlayScene.Gimmick
                 default:
                     throw new System.NotImplementedException("不正なギミックタイプです");
             }
-        }
 
-        private void FixedUpdate()
-        {
-            if (!_isMoving || GamePlayDirector.Instance.State != GamePlayDirector.EGameState.Playing) return;
-
-            // 奥方向に移動させる（見た目変化ない）
-            transform.Translate(Vector3.back * _speed, Space.World);
-
-            // 透明度をあげてだんだんと見えなくする
-            var deltaAlpha = Time.fixedDeltaTime / _meteoriteDisplayTime;
-            _renderer.color -= new Color(0, 0, 0, deltaAlpha);
-
-            if (transform.position.z < -1 * (_meteoriteDisplayTime / Time.fixedDeltaTime) * _speed) {
-                Destroy(gameObject);
-            }
+            var position = _targetPos + _startPosMargin;
+            // 画面外に発生しないように位置の調整
+            var positionX = Mathf.Min(position.x, (GameWindowController.Instance.GetGameCoreSpaceWidth() - _meteoriteRenderer.bounds.size.x) / 2f);
+            var positionY = Mathf.Min(position.y, (GameWindowController.Instance.GetGameCoreSpaceHeight() - _meteoriteRenderer.bounds.size.y) / 2f);
+            position = new Vector2(positionX, positionY);
+            _attackMoveDistance = (position - _targetPos).magnitude;
+            transform.position = position;
         }
 
         public override IEnumerator Trigger()
         {
-            yield return ShowWarning(_targetPos, _warningDisplayTime);
+            var audioIndex = SoundManager.Instance.PlaySE(ESEKey.Gimmick_Meteorite_Drop);
+            // 影の発生
+            AsyncOperationHandle<GameObject> shadowOp;
+            yield return shadowOp = AddressableAssetManager.Instantiate(Constants.Address.METEORITE_SHADOW_PREFAB);
+            _shadow = shadowOp.Result;
+            _shadow.transform.position = _targetPos;
 
-            transform.position = new Vector3(_targetPos.x, _targetPos.y, _speed);
-            GetComponent<Collider2D>().enabled = true;
-            GetComponent<SpriteRenderer>().enabled = true;
-            _isMoving = true;
+            // 動き出しのアニメーション
+            _meteoriteAnimator.SetTrigger(_ANIMATOR_PARAM_TRIGGER_WARNING);
+            _shadow.GetComponent<Animator>().SetTrigger(_ANIMATOR_PARAM_TRIGGER_WARNING);
+            // Attackまで待つ
+            yield return new WaitUntil(() => _meteoriteAnimator.GetCurrentAnimatorStateInfo(0).shortNameHash == _ATTACK_STATE_NAME_HASH);
+
+            // 落下アニメーション
+            yield return MoveToTargetPosition();
+
+            SoundManager.Instance.StopSE(ESEKey.Gimmick_Meteorite_Drop, audioIndex);
+            audioIndex = SoundManager.Instance.PlaySE(ESEKey.Gimmick_Meteorite_Collide);
+            // 落下後、Bottleの奥に描画する
+            _meteoriteRenderer.sortingLayerName = Constants.SortingLayerName.METEORITE;
+            // 隕石の跡が消えるまで待つ
+            yield return new WaitUntil(() => _meteoriteAnimator.GetCurrentAnimatorStateInfo(0).shortNameHash != _REMAINING_STATE_NAME_HASH);
+            SoundManager.Instance.StopSE(ESEKey.Gimmick_Meteorite_Collide, audioIndex);
+            Destroy(_shadow);
+            Destroy(gameObject);
         }
 
-        /// <summary>
-        /// 警告表示
-        /// </summary>
-        /// <param name="warningPos">表示する座標</param>
-        /// <param name="displayTime">表示時間</param>
-        private IEnumerator ShowWarning(Vector2 warningPos, float displayTime)
+        private IEnumerator MoveToTargetPosition()
         {
-            if (_warningObj != null) {
-                _warningPrefab.ReleaseInstance(_warningObj);
+            // 攻撃のクリップの長さ、スタート位置、終了位置からスピードを算出
+            var attackAnimClip = _meteoriteAnimator.runtimeAnimatorController.animationClips.Single(c => c.name == _ATTACK_ANIMATION_CLIP_NAME);
+            var attackAnimationTime = attackAnimClip.length;
+            var speed = _attackMoveDistance / attackAnimationTime;
+
+            var direction = (_targetPos - (Vector2)transform.position);
+            direction.Normalize();
+            var animationTime = 0f;
+            var startPosition = transform.position;
+            while (animationTime <= attackAnimationTime) {
+                transform.position = Vector2.Lerp(startPosition, _targetPos, animationTime / attackAnimationTime);
+                animationTime += Time.fixedDeltaTime;
+                yield return new WaitForFixedUpdate();
             }
-
-            AsyncOperationHandle<GameObject> warningOp;
-            yield return warningOp = _warningPrefab.InstantiateAsync(warningPos, Quaternion.identity);
-
-            _warningObj = warningOp.Result;
-            _warningObj.GetComponent<SpriteRenderer>().sortingOrder = GetComponent<SpriteRenderer>().sortingOrder;
-            _warningObj.GetComponent<SpriteRenderer>().enabled = true;
-
-            // 警告終わるまで待つ
-            while ((displayTime -= Time.fixedDeltaTime) >= 0) yield return new WaitForFixedUpdate();
-
-            if (_warningObj != null) _warningPrefab.ReleaseInstance(_warningObj);
+            transform.position =  _targetPos;
         }
 
         /// <summary>

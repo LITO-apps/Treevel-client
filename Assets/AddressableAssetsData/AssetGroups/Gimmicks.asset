@@ -24,13 +24,6 @@ MonoBehaviour:
     - Gimmick
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
-  - m_GUID: 0ed45840e88a448cfa0eb64fd45d7ad6
-    m_Address: MeteoriteWarningPrefab
-    m_ReadOnly: 0
-    m_SerializedLabels:
-    - Gimmick
-    m_MainAsset: {fileID: 0}
-    m_TargetAsset: {fileID: 0}
   - m_GUID: 187750991088a47b09988c392fc0009e
     m_Address: TornadoWarningPrefab
     m_ReadOnly: 0
@@ -155,10 +148,15 @@ MonoBehaviour:
     m_ReadOnly: 0
     m_SerializedLabels:
     - Gimmick
-    m_MainAsset: {fileID: 8280323434892352676, guid: f31bd5a9814d74c868ab6655ac1d0b5d,
-      type: 3}
-    m_TargetAsset: {fileID: 8280323434892352676, guid: f31bd5a9814d74c868ab6655ac1d0b5d,
-      type: 3}
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
+  - m_GUID: 33aae23c02bd1492f8788a0271a04261
+    m_Address: MeteoriteShadowPrefab
+    m_ReadOnly: 0
+    m_SerializedLabels:
+    - Gimmick
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 86a9d3876e9534cd69e69f31dd11bb5f, type: 2}
   m_SchemaSet:

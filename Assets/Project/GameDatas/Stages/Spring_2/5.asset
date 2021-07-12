@@ -51,7 +51,7 @@ MonoBehaviour:
   - type: 2
     initPos: 4
     goalColor: 1
-    life: 1
+    life: 3
     isSelfish: 0
     isDark: 0
     isReverse: 0
@@ -104,14 +104,96 @@ MonoBehaviour:
     isSelfish: 0
     isDark: 0
     isReverse: 0
-  gimmicks: []
+  gimmicks:
+  - loop: 1
+    appearTime: 3
+    interval: 4
+    type: 1
+    targetDirections: 
+    targetLines: 
+    randomDirection: 
+    randomRow: 
+    randomColumn: 
+    targetRow: 0
+    targetColumn: 0
+    targetBottle: 0
+    randomAttackableBottles: 
+    isRandom: 0
+    targets: []
+    targetDirection: 0
+    attackTimes: 0
+    duration: 0
+    width: 0
+    height: 0
+  - loop: 1
+    appearTime: 4
+    interval: 4
+    type: 1
+    targetDirections: 
+    targetLines: 
+    randomDirection: 
+    randomRow: 
+    randomColumn: 
+    targetRow: 0
+    targetColumn: 2
+    targetBottle: 0
+    randomAttackableBottles: 
+    isRandom: 0
+    targets: []
+    targetDirection: 0
+    attackTimes: 0
+    duration: 0
+    width: 0
+    height: 0
+  - loop: 1
+    appearTime: 5
+    interval: 4
+    type: 1
+    targetDirections: 
+    targetLines: 
+    randomDirection: 
+    randomRow: 
+    randomColumn: 
+    targetRow: 4
+    targetColumn: 0
+    targetBottle: 0
+    randomAttackableBottles: 
+    isRandom: 0
+    targets: []
+    targetDirection: 0
+    attackTimes: 0
+    duration: 0
+    width: 0
+    height: 0
+  - loop: 1
+    appearTime: 6
+    interval: 4
+    type: 1
+    targetDirections: 
+    targetLines: 
+    randomDirection: 
+    randomRow: 
+    randomColumn: 
+    targetRow: 4
+    targetColumn: 2
+    targetBottle: 0
+    randomAttackableBottles: 
+    isRandom: 0
+    targets: []
+    targetDirection: 0
+    attackTimes: 0
+    duration: 0
+    width: 0
+    height: 0
   overviewGimmicks: 
   tutorial:
     type: 0
     image:
       m_AssetGUID: 
       m_SubObjectName: 
+      m_SubObjectType: 
     video:
       m_AssetGUID: 
       m_SubObjectName: 
+      m_SubObjectType: 
   constraintStages: []

@@ -100,6 +100,15 @@ namespace Treevel.Modules.GamePlayScene
         }
 
         /// <summary>
+        /// ゲーム空間のうち、任意のデバイスで描画が保証される領域の縦幅を取得する
+        /// </summary>
+        /// <returns></returns>
+        public float GetGameCoreSpaceHeight()
+        {
+            return _gameCoreSpaceWidth * Constants.WindowSize.HEIGHT / Constants.WindowSize.WIDTH;
+        }
+
+        /// <summary>
         /// タイルの横幅を取得する
         /// </summary>
         /// <returns></returns>
